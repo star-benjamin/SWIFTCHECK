@@ -5,6 +5,7 @@ HardwareSerial mySerial(2); // Using UART2
 Adafruit_Fingerprint finger = Adafruit_Fingerprint(&mySerial);
 
 String firstName;
+
 String lastName;
 
 void setup() {
