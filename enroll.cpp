@@ -4,6 +4,8 @@
 HardwareSerial mySerial(2); // Using UART2
 Adafruit_Fingerprint finger = Adafruit_Fingerprint(&mySerial);
 
+void captureAttendance();
+
 String firstName;
 
 String lastName;
@@ -192,3 +194,40 @@ uint8_t getFingerprintEnroll(uint8_t id) {
 
   return true;
 }
+
+void captureAttendance(){
+  // Attempt to read a fingerprint
+  Serial.println("Place your finger on the sensor...");
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Place finger");
+
+  while (finger.getImage() != FINGERPRINT_OK);
+  
+  // Convert image to template
+  if (finger.image2Tz() != FINGERPRINT_OK) {
+    Serial.println("Error converting image");
+    return;
+  }
+
+  // Search for fingerprint in the database
+  if (finger.fingerSearch() != FINGERPRINT_OK) {
+    Serial.println("Fingerprint not recognized");
+    return;
+  }
+
+  // Print ID of recognized fingerprint
+  Serial.print("Fingerprint recognized! ID: ");
+  Serial.println(finger.fingerID);
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("ATTENDANCE");
+  lcd.setCursor(0,1);
+  lcd.print("RECORED");
+  delay(2000);
+  digitalWrite(BAZ,HIGH);
+
+
+}
+
+
