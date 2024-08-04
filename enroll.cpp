@@ -31,12 +31,22 @@ HardwareSerial mySerial(2); // Using UART2
 Adafruit_Fingerprint finger = Adafruit_Fingerprint(&mySerial);
 #define BUTTON_ENROLL_PIN 14
 #define BUTTON_ATTENDANCE_PIN 12
+const int buzzerPin = 25;
+const int buzzerFrequency = 1000;
+const int buzzerDuration = 500;
 const int led1 = 26;
 const int led2 = 27;
 
+#define Tone1 880
+#define Tone2 1047
+#define Tone3 1319
+
+#define toneDuration 150
+#define pause 50
 //Function declarations
 void enrollNewFingerprint();
 void captureAttendance();
+void playTriTone();
 //void ISR();
 
 int mode=1; //initialise to attendance mode
@@ -46,11 +56,15 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(BUTTON_ENROLL_PIN), loop, FALLING);
   attachInterrupt(digitalPinToInterrupt(BUTTON_ATTENDANCE_PIN), loop, FALLING);
 
+  pinMode(buzzerPin, OUTPUT);
+  pinMode(led1, OUTPUT);
+  pinMode(led2, OUTPUT);
   lcd.init();         // initialize the lcd
   lcd.backlight();    // Turn on the LCD screen backlight
 
   pinMode(BUTTON_ENROLL_PIN, INPUT_PULLUP);
   pinMode(BUTTON_ATTENDANCE_PIN, INPUT_PULLUP);
+  playTriTone();
 
 
   Serial.begin(115200);
@@ -388,6 +402,10 @@ void captureAttendance(){
   // Search for fingerprint in the database
   if (finger.fingerSearch() != FINGERPRINT_OK) {
     Serial.println("Fingerprint not recognized");
+    digitalWrite(led2, HIGH);
+    delay(500);
+    digitalWrite(led2, LOW);
+    tone(buzzerPin, buzzerFrequency, buzzerDuration);
     lcd.setCursor(0,0);
     lcd.print("Not Recognized");
     return;
@@ -397,6 +415,8 @@ void captureAttendance(){
   // Print ID of recognized fingerprint
   Serial.print("Fingerprint recognized! ID: ");
   Serial.println(ID);
+  digitalWrite(led2, LOW);
+  playTriTone();
   lcd.clear();
   lcd.setCursor(0,0);
   lcd.print("ATTENDANCE");
@@ -472,5 +492,12 @@ void captureAttendance(){
 
 
 }
-
+void playTriTone() {
+  tone(buzzerPin, Tone1, toneDuration);
+  delay(toneDuration + pause);
+  tone(buzzerPin, Tone2, toneDuration);
+  delay(toneDuration + pause);
+  tone(buzzerPin, Tone3, toneDuration);
+  delay(toneDuration + pause);
+}
 
