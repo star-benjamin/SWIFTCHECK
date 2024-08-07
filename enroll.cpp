@@ -1,5 +1,6 @@
 #include <Adafruit_Fingerprint.h>
 #include <HardwareSerial.h>
+<<<<<<< HEAD
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <WiFi.h>
@@ -15,7 +16,9 @@
 const char* serverName = "https://script.google.com/macros/s/AKfycbyrRYU9A_ZOHxYP4TTFYwxgCZDdB-YzGE5CNkdSo3ezCFPifBjo3Uxa30WAgC-GJk4OXQ/exec";
 
 LiquidCrystal_I2C lcd(0x27, 16, 2); // set the LCD address to 0x27 for a 16 chars and 2 line display
-//int sensor=A0
+//int sensor=A0 
+=======
+>>>>>>> parent of b6889b5 (button logic)
 
 // Firebase project API Key and URL
 #define API_KEY "AIzaSyCgEAfzqgCaiuzsJrATYTAgy4ZVh6V3j1w"
@@ -27,10 +30,12 @@ FirebaseAuth auth;
 FirebaseConfig config;
 bool signupOK = false;
 
-HardwareSerial mySerial(2); // Using UART2
+HardwareSerial mySerial(2); // Use UART2
 Adafruit_Fingerprint finger = Adafruit_Fingerprint(&mySerial);
+<<<<<<< HEAD
 #define BUTTON_ENROLL_PIN 14
 #define BUTTON_ATTENDANCE_PIN 12
+#define BAZ 15
 const int buzzerPin = 25;
 const int buzzerFrequency = 1000;
 const int buzzerDuration = 500;
@@ -43,68 +48,28 @@ const int led2 = 27;
 
 #define toneDuration 150
 #define pause 50
-//Function declarations
+/Function declarations
 void enrollNewFingerprint();
 void captureAttendance();
-void playTriTone();
 //void ISR();
 
 int mode=1; //initialise to attendance mode
 
+String firstName;
+String lastName;
 
 void setup() {
   attachInterrupt(digitalPinToInterrupt(BUTTON_ENROLL_PIN), loop, FALLING);
   attachInterrupt(digitalPinToInterrupt(BUTTON_ATTENDANCE_PIN), loop, FALLING);
 
-  pinMode(buzzerPin, OUTPUT);
-  pinMode(led1, OUTPUT);
-  pinMode(led2, OUTPUT);
   lcd.init();         // initialize the lcd
   lcd.backlight();    // Turn on the LCD screen backlight
 
   pinMode(BUTTON_ENROLL_PIN, INPUT_PULLUP);
   pinMode(BUTTON_ATTENDANCE_PIN, INPUT_PULLUP);
-  playTriTone();
 
 
   Serial.begin(115200);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.print("Connecting to Wi-Fi");
-  lcd.setCursor(0,0);
-  lcd.print("WiFi not Active");
-  digitalWrite(led1, LOW);
-  while (WiFi.status() != WL_CONNECTED){
-    Serial.print(".");
-    delay(300);
-  }
-  Serial.println();
-  Serial.print("Connected with IP: ");
-  lcd.setCursor(0,0);
-  lcd.print("WiFi Active");
-  Serial.println(WiFi.localIP());
-  Serial.println();
-  digitalWrite(led1, HIGH);
-
-  /* Assigning the api key*/
-  config.api_key = API_KEY;
-
-  /* Assigning the RTDB URL*/
-  config.database_url = DATABASE_URL;
-
-  /* Sign up */
-  if (Firebase.signUp(&config, &auth, "", "")){
-    Serial.println("ok");
-    signupOK = true;
-  }
-  else{
-    Serial.printf("%s\n", config.signer.signupError.message.c_str());
-  }
-
-  /* Assigning the callback function for the long running token generation task */
-  config.token_status_callback = tokenStatusCallback; //see addons/TokenHelper.h
-  
-  Firebase.begin(&config, &auth);
-  Firebase.reconnectWiFi(true);
   mySerial.begin(57600, SERIAL_8N1, 16, 17); // RX = 16, TX = 17
 
   if (finger.verifyPassword()) {
@@ -121,8 +86,6 @@ void setup() {
     while (1) { delay(1); }
   }
 }
-
-  
 
 void loop() {
 
@@ -169,67 +132,59 @@ void loop() {
 }  
 
 void enrollNewFingerprint(){
-  String fname;
-  String lname;
-  String sclass;
-if (Firebase.ready() && signupOK){
-    //sendDataPrevMillis = millis();
-    // Write an Int number on the database path test1/int
 
-    Serial.println("Enter ID");
-    while(!Serial.available());
-    ID = Serial.parseInt();
-    Serial.readStringUntil('\n');
+  lcd.setCursor(0,0);
+  lcd.print("In Enroll Mode");
+  delay(2000);
+  lcd.clear();
 
-    Serial.println("Enter fname");
-    while(!Serial.available());
-    fname=Serial.readStringUntil('\n');
-    fname.trim();
+  Serial.println("Ready to enroll a fingerprint!");
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Enter id");
+  lcd.setCursor(0,1);
+  lcd.print("and name");
+  //delay(5000);
+  //lcd.clear();
 
-    if (Firebase.RTDB.setString(&fbdo, "/" + String(ID) + "/fname", String(fname))){
-      Serial.println("PASSED");
-      }
-    else {
-      Serial.println("FAILED");
-      Serial.println("REASON: " + fbdo.errorReason());
-    }
 
-    Serial.println("Enter lname");
-    while(!Serial.available());
-    lname=Serial.readStringUntil('\n');
-    lname.trim();
-    
-    if (Firebase.RTDB.setString(&fbdo, "/" + String(ID) + "/lname", String(lname))){
-      Serial.println("PASSED");
-    }
-    else {
-      Serial.println("FAILED");
-      Serial.println("REASON: " + fbdo.errorReason());
-    }
 
-    Serial.println("Enter sclass");
-    while(!Serial.available());
-    sclass=Serial.readStringUntil('\n');
-    sclass.trim();
 
-    if (Firebase.RTDB.setString(&fbdo, "/" + String(ID) + "/class", String(sclass))){
-      Serial.println("PASSED");
-    }
-    else {
-      Serial.println("FAILED");
-      Serial.println("REASON: " + fbdo.errorReason());
-    }
 
-    while (!getFingerprintEnroll(ID));
+  Serial.println("Enter name and ID"); //# (from 1 to 127) you want to save this finger as...");
+  while (!Serial.available());
+  int id = Serial.parseInt();
+  if (id == 0) { // ID #0 not allowed, try again!
+    return;
   }
+  Serial.print("Enrolling ID #");
+  Serial.println(id);
 
-uint8_t getFingerprintEnroll(uint8_t ID) {
+  Serial.println("Please enter the first name:");
+  while (!Serial.available());
+  firstName = Serial.readStringUntil('\n');
+  firstName.trim();
+
+  Serial.println("Please enter the last name:");
+  while (!Serial.available());
+  lastName = Serial.readStringUntil('\n');
+  lastName.trim();
+
+  Serial.print("Enrolling fingerprint for ");
+  Serial.print(firstName);
+  Serial.print(" ");
+  Serial.println(lastName);
+
+  while (!getFingerprintEnroll(id));
+}
+
+uint8_t getFingerprintEnroll(uint8_t id) {
   int p = -1;
   Serial.print("Waiting for valid finger to enroll as #");
   lcd.setCursor(1,0);
   lcd.clear();
   lcd.print("Place finger");
-  Serial.println(ID);
+  Serial.println(id);
 
 
   while (p != FINGERPRINT_OK) {
@@ -349,7 +304,7 @@ uint8_t getFingerprintEnroll(uint8_t ID) {
     return p;
   }
 
-  p = finger.storeModel(ID);
+  p = finger.storeModel(id);
   if (p == FINGERPRINT_OK) {
     Serial.println("Stored!");
     
@@ -379,6 +334,10 @@ uint8_t getFingerprintEnroll(uint8_t ID) {
 
   return true;
 }
+
+  
+
+
 
 
 void captureAttendance(){
