@@ -70,7 +70,7 @@ void setup() {
 
   pinMode(BUTTON_ENROLL_PIN, INPUT_PULLUP);
   pinMode(BUTTON_ATTENDANCE_PIN, INPUT_PULLUP);
-   pinMode(BUTTON_DELETE_PIN, INPUT_PULLUP);
+  pinMode(BUTTON_DELETE_PIN, INPUT_PULLUP);
 
 
   Serial.begin(115200);
@@ -89,6 +89,16 @@ void setup() {
     lcd.print("Sensor error");
     while (1) { delay(1); }
   }
+}
+//for deleteing a fingerprint
+uint8_t readnumber(void) {
+  uint8_t num = 0;
+
+  while (num == 0) {
+    while (! Serial.available());
+    num = Serial.parseInt();
+  }
+  return num;
 }
 
 void loop() {
