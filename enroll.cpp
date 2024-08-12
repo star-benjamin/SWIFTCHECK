@@ -505,13 +505,13 @@ void playTriTone() {
 
 void delete_fingerprint(){
   Serial.println("DELETE MODE");
-  Serial.println("Please type in the ID # (from 1 to 127) you want to delete...");
+  Serial.println("Please type in the ID # you want to delete...");
   uint8_t id = readnumber();
   if (id == 0) {// ID #0 not allowed, try again!
      return;
   }
 
-  Serial.print("Deleting ID #");
+  Serial.print("Deleting ID ");
   Serial.println(id);
 
   deleteFingerprint(id);
