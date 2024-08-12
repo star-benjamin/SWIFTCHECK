@@ -35,6 +35,7 @@ Adafruit_Fingerprint finger = Adafruit_Fingerprint(&mySerial);
 <<<<<<< HEAD
 #define BUTTON_ENROLL_PIN 14
 #define BUTTON_ATTENDANCE_PIN 12
+#define BUTTON_DELETE_PIN 13  
 #define BAZ 15
 const int buzzerPin = 25;
 const int buzzerFrequency = 1000;
@@ -49,6 +50,7 @@ const int led2 = 27;
 #define toneDuration 150
 #define pause 50
 /Function declarations
+void delete_fingerprint();
 void enrollNewFingerprint();
 void captureAttendance();
 //void ISR();
@@ -61,12 +63,14 @@ String lastName;
 void setup() {
   attachInterrupt(digitalPinToInterrupt(BUTTON_ENROLL_PIN), loop, FALLING);
   attachInterrupt(digitalPinToInterrupt(BUTTON_ATTENDANCE_PIN), loop, FALLING);
+  attachInterrupt(digitalPinToInterrupt(BUTTON_DELETE_PIN), loop, FALLING);
 
   lcd.init();         // initialize the lcd
   lcd.backlight();    // Turn on the LCD screen backlight
 
   pinMode(BUTTON_ENROLL_PIN, INPUT_PULLUP);
   pinMode(BUTTON_ATTENDANCE_PIN, INPUT_PULLUP);
+   pinMode(BUTTON_DELETE_PIN, INPUT_PULLUP);
 
 
   Serial.begin(115200);
@@ -88,7 +92,7 @@ void setup() {
 }
 
 void loop() {
-
+  //ENROLL
   if (digitalRead(BUTTON_ENROLL_PIN) == LOW) {
     mode = 0;  // Switch to Enrollment Mode
     lcd.clear();
@@ -103,7 +107,7 @@ void loop() {
     delay(2000);
     lcd.clear();
   }
-  
+  //ATTENDANCE
   if (digitalRead(BUTTON_ATTENDANCE_PIN) == LOW) {
     mode = 1;  // Switch to Attendance Mode
     Serial.println("Mode: Attendance");
@@ -111,6 +115,17 @@ void loop() {
 
     lcd.setCursor(2,0);
     lcd.print("In Attend Mode");
+    delay(2000);
+    lcd.clear();
+  }
+  //DELETE
+  if (digitalRead(BUTTON_DELETE_PIN) == LOW) {
+    mode = 2;  // Switch to Attendance Mode
+    Serial.println("Mode: Attendance");
+    delay(50); // Debounce delay
+
+    lcd.setCursor(0,0);
+    lcd.print("In Delete Mode");
     delay(2000);
     lcd.clear();
   }
@@ -127,6 +142,12 @@ void loop() {
     lcd.print("MODE 1");
     delay(2000);
     captureAttendance();
+  }else if (mode == 2) {
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("MODE 2");
+    delay(2000);
+    delete_fingerprint();
   }
   delay(200);
 }  
@@ -458,5 +479,40 @@ void playTriTone() {
   delay(toneDuration + pause);
   tone(buzzerPin, Tone3, toneDuration);
   delay(toneDuration + pause);
+}
+
+void delete_fingerprint(){
+  Serial.println("DELETE MODE");
+  Serial.println("Please type in the ID # (from 1 to 127) you want to delete...");
+  uint8_t id = readnumber();
+  if (id == 0) {// ID #0 not allowed, try again!
+     return;
+  }
+
+  Serial.print("Deleting ID #");
+  Serial.println(id);
+
+  deleteFingerprint(id);
+} 
+
+  uint8_t deleteFingerprint(uint8_t id) {
+  uint8_t p = -1;
+
+  p = finger.deleteModel(id);
+
+  if (p == FINGERPRINT_OK) {
+    Serial.println("Deleted!");
+  } else if (p == FINGERPRINT_PACKETRECIEVEERR) {
+    Serial.println("Communication error");
+  } else if (p == FINGERPRINT_BADLOCATION) {
+    Serial.println("Could not delete in that location");
+  } else if (p == FINGERPRINT_FLASHERR) {
+    Serial.println("Error writing to flash");
+  } else {
+    Serial.print("Unknown error: 0x"); Serial.println(p, HEX);
+  }
+
+  return p;
+
 }
 
