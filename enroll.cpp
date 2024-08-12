@@ -375,6 +375,8 @@ void captureAttendance(){
   String FIRSTNAME;
   String LASTNAME;
   String SCLASS;
+  String PCONTACT;
+  
   // Attempt to read a fingerprint
   Serial.println("Place your finger on the sensor...");
   lcd.clear();
@@ -446,7 +448,17 @@ void captureAttendance(){
     }
     else {
       Serial.println(fbdo.errorReason());
-      }    
+      } 
+
+    if (Firebase.RTDB.getString(&fbdo, "/" + String(ID) + "/Pcontact")) {
+        if (fbdo.dataType() == "string") {
+          PCONTACT = fbdo.stringData();
+          Serial.println(PCONTACT);
+        }
+    }
+    else {
+      Serial.println(fbdo.errorReason());
+      }
   }
 
   if (WiFi.status() == WL_CONNECTED) {
