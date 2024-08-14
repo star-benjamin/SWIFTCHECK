@@ -1,6 +1,5 @@
 #include <Adafruit_Fingerprint.h>
 #include <HardwareSerial.h>
-<<<<<<< HEAD
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <WiFi.h>
@@ -12,13 +11,18 @@
 #define WIFI_SSID "VAWZEN"
 #define WIFI_PASSWORD "Maya552002.L"
 
+#define RXD1 4
+#define RXD1 5
+#define RXD2 16
+#define RXD2 17
+// Initialize Serial2 for SIM800L
+HardwareSerial sim800l(1);
+
 // Google Script Deployment URL
 const char* serverName = "https://script.google.com/macros/s/AKfycbyrRYU9A_ZOHxYP4TTFYwxgCZDdB-YzGE5CNkdSo3ezCFPifBjo3Uxa30WAgC-GJk4OXQ/exec";
 
 LiquidCrystal_I2C lcd(0x27, 16, 2); // set the LCD address to 0x27 for a 16 chars and 2 line display
 //int sensor=A0 
-=======
->>>>>>> parent of b6889b5 (button logic)
 
 // Firebase project API Key and URL
 #define API_KEY "AIzaSyCgEAfzqgCaiuzsJrATYTAgy4ZVh6V3j1w"
@@ -32,7 +36,6 @@ bool signupOK = false;
 
 HardwareSerial mySerial(2); // Use UART2
 Adafruit_Fingerprint finger = Adafruit_Fingerprint(&mySerial);
-<<<<<<< HEAD
 #define BUTTON_ENROLL_PIN 14
 #define BUTTON_ATTENDANCE_PIN 12
 #define BUTTON_DELETE_PIN 13  
@@ -89,6 +92,11 @@ void setup() {
     lcd.print("Sensor error");
     while (1) { delay(1); }
   }
+  sim800l.begin(9600, SERIAL_8N1, RXD1, TXD1);
+  sim800l.println("AT");
+  delay(1000);
+  Serial.println("Initializing GSM module...");
+  delay(1000);
 }
 //for deleteing a fingerprint
 uint8_t readnumber(void) {
@@ -460,6 +468,9 @@ void captureAttendance(){
       Serial.println(fbdo.errorReason());
       }
   }
+  
+  String smsMessage = "Dear Parent, your child " + FIRSTNAME + " " + LASTNAME + " from class " + SCLASS + " has just checked in.";
+  sendSMS(PCONTACT, smsMessage);
 
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
@@ -535,6 +546,16 @@ void delete_fingerprint(){
   }
 
   return p;
-
 }
 
+void sendSMS(String PCONTACT, String message) {
+   sim800l.println("AT+CMGF=1"); // Set SMS to text mode
+   delay(1000);
+   sim800l.println("AT+CMGS=\"" + PCONTACT + "\"");  // Send SMS command
+   delay(1000);
+   sim800l.println(message);  // The SMS content
+   delay(1000);
+   sim800l.println((char)26);  // End AT command with a ^Z, ASCII code 26
+   delay(3000);
+   Serial.println("SMS sent successfully!");
+}
